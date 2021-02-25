@@ -18,7 +18,8 @@ class DataHandler:
             # TODO In few shot learning scenario, we need to test on faces the model has never seen before,
             # TODO and not like this!
             # Split into training and testing sets.
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            self.X_test, self.X_validate, self.y_test, self.y_validate = train_test_split(self.X_test, self.y_test, test_size=0.5, random_state=42)
 
         elif data_to_load == "MNIST":
             # The MNIST database of handwritten digits, available from this page, has a training set of 60,000 examples, 
@@ -32,6 +33,10 @@ class DataHandler:
                                       (self.X_train.shape[0], self.X_train.shape[1] * self.X_train.shape[2])) / 255.
             self.X_test = np.reshape(self.X_test,
                                      (self.X_test.shape[0], self.X_test.shape[1] * self.X_test.shape[2])) / 255.
+            
+            # Create an extra validation set.
+            self.X_train, self.X_validate, self.y_train, self.y_validate = train_test_split(self.X_train, self.y_train, 
+                                                                                            test_size=0.15, random_state=42)
 
         elif data_to_load == "fashion_MNIST":
             # The MNIST database of handwritten digits, available from this page, has a training set of 60,000 examples, 
@@ -45,7 +50,10 @@ class DataHandler:
                                       (self.X_train.shape[0], self.X_train.shape[1] * self.X_train.shape[2])) / 255.
             self.X_test = np.reshape(self.X_test,
                                      (self.X_test.shape[0], self.X_test.shape[1] * self.X_test.shape[2])) / 255.
-
+            
+            # Create an extra validation set.
+            self.X_train, self.X_validate, self.y_train, self.y_validate = train_test_split(self.X_train, self.y_train, 
+                                                                                            test_size=0.15, random_state=42)
         # Select only certain classes from the dataset.
         if classes_to_select:
             self.select_classes(classes_to_select)
@@ -53,18 +61,21 @@ class DataHandler:
         self.n_features = self.X_train.shape[1]
         self.n_train = self.X_train.shape[0]
         self.n_test = self.X_test.shape[0]
+        self.n_validate = self.X_validate.shape[0]
 
     # Select only certain classes from the dataset.
     def select_classes(self, classes_to_select):
         train_mask = np.isin(self.y_train, classes_to_select)  # classes_to_select je lista klasi npr [2,8]
         self.X_train = self.X_train[train_mask]                # zasad je classes to select za samo 2 klase.. np.array dole
-        #self.y_train = np.array(self.y_train[train_mask] == classes_to_select[1], dtype=int)
         self.y_train = self.y_train[train_mask]
 
         test_mask = np.isin(self.y_test, classes_to_select)
         self.X_test = self.X_test[test_mask]
-        #self.y_test = np.array(self.y_test[test_mask] == classes_to_select[1], dtype=int)
         self.y_test = self.y_test[test_mask]
+        
+        validate_mask = np.isin(self.y_validate, classes_to_select)
+        self.X_validate = self.X_validate[validate_mask]
+        self.y_validate = self.y_validate[validate_mask]
 
     # Sort data by occurrence. The most frequent data goes first.
     @staticmethod
@@ -137,9 +148,10 @@ class DataHandler:
 
             # Most of the data is going to be dissimilar.
             # With choose_probability we want to give some advantage to the positives as well.
+            # This parameter has some damn powerful effect on the results.. Document it!!
             choose_probability = random.randint(1, 10)
 
-            if choose_probability < 3:
+            if choose_probability < 1:
                 # Choose a random similar example.
                 ys[i] = 0
                 # We assume that there is at least one similar example.

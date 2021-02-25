@@ -44,6 +44,15 @@ class ModelHandler:
             model.add(Dense(128, activation='relu'))
             model.add(Dense(128, activation='relu'))
             model.add(Dense(self.embedding_size, activation='sigmoid'))
+        if model_number == 5:
+            model = Sequential()
+            model.add(Reshape(self.input_feature_dim, input_shape=(self.input_feature_size,)))
+            model.add(Conv2D(64, (10,10), activation='relu', input_shape=self.input_feature_dim))
+            model.add(MaxPooling2D())
+            model.add(Conv2D(128, (7,7), activation='relu'))
+            model.add(MaxPooling2D())
+            model.add(Flatten())
+            model.add(Dense(self.embedding_size, activation='sigmoid'))
             
         return model
 
