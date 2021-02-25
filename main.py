@@ -9,7 +9,7 @@ from plotters import PCAPlotter
 #X_test_sorted, y_test_sorted = DataHandler.sort_by_occurence(dh.X_test, dh.y_test)
 
 #%% MNIST dataset
-dh = DataHandler("MNIST")
+dh = DataHandler("MNIST", [0,1])
 
 # %% Define embedding model
 mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape)
@@ -18,11 +18,11 @@ mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape
 net = TripletNet(mh, dh, alpha=0.2)
 net.print_model()
 batch_size = 200
-epochs = 5 # 60
+epochs = 1 # 60
 # A common practice is to set this value to number of samples/batch_size
 # so that the model sees the training samples at most once per epoch.
 steps_per_epoch = int(dh.n_train/batch_size) 
-net.train(dh.create_triplet_batch_random, batch_size, epochs, steps_per_epoch)     
+history = net.train(dh.create_triplet_batch_random, batch_size, epochs, steps_per_epoch)     
 
 ##%% Plot data LFW
 ## TRAIN DATA

@@ -6,6 +6,7 @@ import numpy as np
 
 class TripletNet:
     def __init__(self, model_handler, data_handler, alpha):
+        self.data_handler = data_handler
         self.input_feature_size = data_handler.n_features
         self.embedding_model = model_handler.model
         self.embedding_size = model_handler.embedding_size
@@ -48,8 +49,13 @@ class TripletNet:
         negative_dist = tf.reduce_mean(tf.square(anchor - negative), axis=1)
         return tf.maximum(positive_dist - negative_dist + self.alpha, 0.)
     
-    def train(self, create_batch_function, batch_size, epochs, steps_per_epoch):     
-        _ = self.net.fit(
+    def train(self, create_batch_function, batch_size, epochs, steps_per_epoch):  
+        [x_anchors, x_positives, x_negatives], ys = self.data_handler.create_validation_triplets()
+        validation_data = ([x_anchors, x_positives, x_negatives], ys)
+        
+        history = self.net.fit(
             self.data_generator(create_batch_function, batch_size),
-            steps_per_epoch=steps_per_epoch,
-            epochs=epochs, verbose=True)
+            steps_per_epoch=steps_per_epoch, epochs=epochs, verbose=True,
+            validation_data=validation_data)
+        
+        return history

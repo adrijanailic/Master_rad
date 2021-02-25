@@ -23,7 +23,7 @@ net.print_model()
 batch_size = 200
 epochs = 5
 steps_per_epoch = int(dh.n_train / batch_size)
-net.train(dh.create_pair_batch_random, batch_size, epochs, steps_per_epoch)
+history = net.train(dh.create_pair_batch_random, batch_size, epochs, steps_per_epoch)
 
 # %% Plot data MNIST
 #

@@ -171,3 +171,66 @@ class DataHandler:
             x_2s[i] = x_2
                 
         return [x_1s, x_2s], ys
+    
+    # Create validation pairs. For now, I create only n_validate pairs, because otherwise we would
+    # have too many of them.
+    def create_validation_pairs(self):
+        x_1s = np.zeros((self.n_validate, self.n_features))
+        x_2s = np.zeros((self.n_validate, self.n_features))
+        ys = np.zeros(self.n_validate)  # Similarity array: 0 - data from the same class, 1 - different class.
+
+        for i in range(0, self.n_validate):
+            # Choose first element x_1 randomly.
+            random_index = random.randint(0, self.n_validate - 1)
+            x_1 = self.X_validate[random_index]
+            y_1 = self.y_validate[random_index]
+
+            random_index = random.randint(0, self.n_validate - 1)
+            x_2 = self.X_validate[random_index]
+            y_2 = self.y_validate[random_index]
+
+            if y_1 == y_2:
+                ys[i] = 0
+            else:
+                ys[i] = 1
+
+            # Declare i-th pair.
+            x_1s[i] = x_1
+            x_2s[i] = x_2
+                
+        return [x_1s, x_2s], ys
+    
+    # Create validation triplets. For now, I create only n_validate triplets, because otherwise we would
+    # have too many of them.
+    def create_validation_triplets(self):
+        x_anchors = np.zeros((self.n_validate, self.n_features))
+        x_positives = np.zeros((self.n_validate, self.n_features))
+        x_negatives = np.zeros((self.n_validate, self.n_features))
+        ys = np.zeros(self.n_validate)
+
+        for i in range(0, self.n_validate):
+            # Choose anchor randomly.
+            random_index = random.randint(0, self.n_validate - 1)
+            x_anchor = self.X_validate[random_index]
+            y = self.y_validate[random_index]
+
+            # Based on the anchor, determine which samples are positive, 
+            # and which ones are negative. Get their indices.
+            positive_indices = np.squeeze(np.where(self.y_validate == y))
+            negative_indices = np.squeeze(np.where(self.y_validate != y))
+
+            # Choose a random positive. We assume that there is at least one positive.
+            if positive_indices.ndim != 0:
+                x_positive = self.X_validate[positive_indices[random.randint(0, len(positive_indices) - 1)]]
+            else:
+                x_positive = self.X_validate[positive_indices]
+
+            # Choose a random negative.
+            x_negative = self.X_validate[negative_indices[random.randint(0, len(negative_indices) - 1)]]
+
+            # Declare i-th triplet.
+            x_anchors[i] = x_anchor
+            x_positives[i] = x_positive
+            x_negatives[i] = x_negative
+
+        return [x_anchors, x_positives, x_negatives], ys

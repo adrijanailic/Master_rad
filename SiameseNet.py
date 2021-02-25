@@ -7,6 +7,7 @@ from tensorflow.keras.models import Model
 class SiameseNet:
 
     def __init__(self, model_handler, data_handler, alpha):
+        self.data_handler = data_handler
         self.input_feature_size = data_handler.n_features
         self.embedding_model = model_handler.model
         self.embedding_size = model_handler.embedding_size
@@ -58,7 +59,12 @@ class SiameseNet:
         #return K.mean(y_true * square_pred + (1 - y_true) * margin_square)
 
     def train(self, create_batch_function, batch_size, epochs, steps_per_epoch):
-        _ = self.net.fit(
+        [x_1s, x_2s], ys = self.data_handler.create_validation_pairs()
+        validation_data = ([x_1s, x_2s], ys)
+        
+        history = self.net.fit(
             self.data_generator(create_batch_function, batch_size),
-            steps_per_epoch=steps_per_epoch,
-            epochs=epochs, verbose=True)
+            steps_per_epoch=steps_per_epoch, epochs=epochs, verbose=True,
+            validation_data=validation_data)
+        
+        return history
