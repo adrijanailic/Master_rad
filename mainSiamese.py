@@ -9,16 +9,16 @@ from plotters import Plotter
 # X_test_sorted, y_test_sorted = DataHandler.sort_by_occurrence(X_test, y_test)
 
 # %% MNIST dataset
-dh = DataHandler("MNIST", classes_to_select=[2,5])
+dh = DataHandler("MNIST", classes_to_select=[2,3,5])
 
 # %% Define embedding model
 mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape)
 
 # %% Define siamese net
-net = SiameseNet(mh, dh, alpha=0.15)
+net = SiameseNet(mh, dh, alpha=0.5)
 net.print_model()
 batch_size = 200
-epochs = 5
+epochs = 2
 steps_per_epoch = int(dh.n_train / batch_size)
 history = net.train(dh.create_pair_batch_random, batch_size, epochs, steps_per_epoch)
 

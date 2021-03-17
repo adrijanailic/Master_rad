@@ -9,7 +9,7 @@ from plotters import Plotter
 #X_test_sorted, y_test_sorted = DataHandler.sort_by_occurence(dh.X_test, dh.y_test)
 
 #%% MNIST dataset
-dh = DataHandler("MNIST", [0,1])
+dh = DataHandler("MNIST", [2,3,5])
 
 # %% Define embedding model
 mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape)
@@ -17,12 +17,12 @@ mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape
 #%% Define triplet net
 net = TripletNet(mh, dh, alpha=0.2)
 net.print_model()
-batch_size = 200
-epochs = 5 # 60
+batch_size = 300
+epochs = 2 # 60
 # A common practice is to set this value to number of samples/batch_size
 # so that the model sees the training samples at most once per epoch.
-steps_per_epoch = int(dh.n_train/batch_size) 
-history = net.train(dh.create_triplet_batch_random, batch_size, epochs, steps_per_epoch)
+steps_per_epoch = 1# int(dh.n_train/batch_size) 
+history = net.train("batch_hard", batch_size, epochs, steps_per_epoch)
 
 #%% Plot losses
 plotter = Plotter()
