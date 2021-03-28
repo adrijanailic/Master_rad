@@ -3,35 +3,43 @@ from ModelHandler import ModelHandler
 from DataHandler import DataHandler
 from plotters import Plotter
 
-# %% LFW dataset
-# dh = DataHandler.DataHandler("LFW")
-# X_train_sorted, y_train_sorted = DataHandler.sort_by_occurrence(X_train, y_train)
-# X_test_sorted, y_test_sorted = DataHandler.sort_by_occurrence(X_test, y_test)
-
 # %% MNIST dataset
-dh = DataHandler("MNIST", classes_to_select=[2,3,5])
+dh = DataHandler("MNIST", classes_to_select=[0,1,2,3,4,5,6])
+#dh_newdata = DataHandler("MNIST", classes_to_select=[7,8,9])
 
 # %% Define embedding model
-mh = ModelHandler(model_number=5, embedding_size=200, input_feature_dim=dh.shape)
+mh = ModelHandler(model_number=4, embedding_size=200, input_feature_dim=dh.shape)
 
 # %% Define siamese net
-net = SiameseNet(mh, dh, alpha=0.5)
-net.print_model()
-batch_size = 200
-epochs = 2
-steps_per_epoch = int(dh.n_train / batch_size)
-history = net.train(dh.create_pair_batch_random, batch_size, epochs, steps_per_epoch)
+#alphas = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
+alphas = [0.1]
+for alpha in alphas:
+    net = SiameseNet(mh, dh, alpha)
+    net.print_model()
+    batch_size = 200
+    epochs = 1
+    steps_per_epoch = 1#int(dh.n_train / batch_size)
+    history = net.train("create_pair_batch_random", batch_size, epochs, steps_per_epoch)
 
-# %% Plot loss
-# Losses
-plotter = Plotter()
-plotter.plot_losses(history, epochs)
+    # % Plot loss
+    # Losses
+    plotter = Plotter()
+    plotter.plot_losses(net, history)
 
-# %% Plot data MNIST
-# TRAIN DATA ############################################################################
-plotter.pca_plot(X=dh.X_train, y=dh.y_train, embedding_model=net.embedding_model)
-# TODO include title when plotting, add stuff like embedding size, model number?, batch size, ....
-#
-# TEST DATA #############################################################################
-plotter.pca_plot(X=dh.X_test, y=dh.y_test, embedding_model=net.embedding_model)
+    # % Plot data MNIST
+    # TRAIN DATA ############################################################################
+    plotter.pca_plot(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
 
+    # % TEST DATA #############################################################################
+    plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net, suptitle='Test data')
+    
+    # % NEW DATA #############################################################################
+    #plotter.set_plot_parameters(workspace)
+    #plotter.pca_plot(X=dh_newdata.X_test, y=dh_newdata.y_test, net=net, suptitle='Different data')
+
+# %% NEW DATA
+net.save_model()
+net1 = SiameseNet(model_name='model4_alpha0.1_epochs1_batchSize200_steps1')
+
+plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net1, suptitle='hgfhfg data')
+   
