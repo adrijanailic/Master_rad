@@ -4,7 +4,7 @@ from ModelHandler import ModelHandler
 from plotters import Plotter
 
 #%% MNIST dataset
-dh = DataHandler("MNIST", [7,9])
+dh = DataHandler("MNIST")
 
 # %% Define embedding model
 mh = ModelHandler(model_number=4, embedding_size=200, input_feature_dim=dh.shape)
@@ -13,11 +13,11 @@ mh = ModelHandler(model_number=4, embedding_size=200, input_feature_dim=dh.shape
 #alphas = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
 alphas = [0.1]
 #mining_methods = ['batch_all', 'batch_hard', 'create_triplet_batch_random']
-mining_methods = ['batch_hard']
+mining_methods = ['create_triplet_batch_random']
 #numbers_of_samples_per_class = [5, 10, 15, 20, 25]
 numbers_of_samples_per_class = [15]
 #epochs = [5, 10, 20, 30, 50, 100, 150, 200]
-epochs = [20]
+epochs = [3]
 batch_sizes = [300]
 
 for method in mining_methods:
@@ -43,7 +43,7 @@ for method in mining_methods:
                     P = dh.n_classes  # Number of classes.
                     total_batch_size = P*K
                     steps_per_epoch = 1#int(dh.n_train/total_batch_size)
-                    epoch = 150
+                    epoch = 10
 
                 else:
                     # A common practice is to set this value to number of samples/batch_size
@@ -60,11 +60,11 @@ for method in mining_methods:
             
                 # % Plot data MNIST
                 # TRAIN DATA ############################################################################
-                plotter.pca_plot(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
+                plotter.tsne_plot(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
                 # TODO include title when plotting, add stuff like embedding size, model number?, batch size, ....
             
                 # % TEST DATA #############################################################################
-                plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net, suptitle='Test data')
+                plotter.tsne_plot(X=dh.X_test, y=dh.y_test, net=net, suptitle='Test data')
                 
                 # % NEW DATA #############################################################################
                 #plotter.set_plot_parameters(workspace)
@@ -74,7 +74,11 @@ for method in mining_methods:
 #dhnew = DataHandler("MNIST", [7,9])
 #plotter.scatter(dhnew.X_train, dhnew.y_train)
 #net.save_model()
-#net1 = TripletNet(model_name='model5_mining-batch_hard_alpha0.1_epochs10_numberOfSamplesPerClass2_steps1')
+net1 = TripletNet(model_name='model4_mining-create_triplet_batch_random_alpha0.1_epochs3_batchSize300_steps170')
 
 #plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net1, suptitle='hgfhfg data')
+plotter = Plotter()
+plotter.pca_plot(X=dh.X_train, y=dh.y_train, net=net1, suptitle='Train data')
+#plotter.tsne_plot(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
+
    

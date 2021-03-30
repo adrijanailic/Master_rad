@@ -2,6 +2,9 @@ from sklearn.decomposition import PCA
 from SiameseNet import SiameseNet
 from TripletNet import TripletNet
 import matplotlib.pyplot as plt
+from numpy import random
+from sklearn.manifold import TSNE
+
 
 # Plotter class.
 class Plotter:   
@@ -71,18 +74,6 @@ class Plotter:
         plt.savefig('pics/' + folder_name + '/' + model_name + '.png', bbox_inches="tight")
         plt.show()
         
-    # # Set parameters for plotting.
-    # # workspace - Dictionary object with parameters values.
-    # def set_plot_parameters(self, workspace):
-    #     self.net_type = workspace["net"]
-    #     self.model_number = workspace["model_number"]
-    #     self.batch_size = workspace["batch_size"]
-    #     self.epochs = workspace["epochs"]
-    #     self.steps_per_epoch = workspace["steps_per_epoch"]
-    #     self.alpha = workspace["alpha"]
-    #     self.mining_method = workspace["mining_method"]
-    #     self.number_of_samples_per_class = workspace["number_of_samples_per_class"]
-        
     # Make 2 PCA subplots - one with original data, and one with the same data, embedded with net.
     # X        - Data to be plotted.
     # y        - Labels of X data.
@@ -101,8 +92,96 @@ class Plotter:
         ax2.set_title('Embedded data')
         ax1.grid()
         ax2.grid()
-        ax1.scatter(pca_original[:, 0], pca_original[:, 1], c=y, cmap='Accent')
-        ax2.scatter(pca_embedded[:, 0], pca_embedded[:, 1], c=y, cmap='Accent')
+        ax1.scatter(pca_original[:, 0], pca_original[:, 1], c=y, cmap='Paired')
+        scatter_2 = ax2.scatter(pca_embedded[:, 0], pca_embedded[:, 1], c=y, cmap='Paired') #ncol = net.data_handler.n_classes
+        legend2 = ax2.legend(*scatter_2.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
+        ax2.add_artist(legend2)
+        
+        if isinstance(net, SiameseNet):
+            folder_name = 'contrastive'
+            figtext = "embedding size = " + str(net.embedding_size) + " \n" \
+                  + "alpha = " + str(net.alpha) + " \n" \
+                  + "batch size = " + str(net.batch_size) + " \n" \
+                  + "epochs = " + str(net.epochs) + " \n" \
+                  + "steps per epoch = " + str(net.steps_per_epoch)
+            
+            model_name = suptitle + '_model' + str(net.model_handler.model_number) \
+                  + '_alpha' + str(net.alpha) \
+                  + '_epochs' + str(net.epochs) \
+                  + '_batchSize' + str(net.batch_size) \
+                  + '_steps' + str(net.steps_per_epoch)
+        
+        elif isinstance(net, TripletNet):
+            folder_name = 'triplet'
+            if net.mining_method == "create_triplet_batch_random":
+                figtext = "mining method = " + net.mining_method + " \n" \
+                      + "embedding size = "  + str(net.embedding_size) + " \n" \
+                      + "alpha = "           + str(net.alpha) + " \n" \
+                      + "batch size = "      + str(net.batch_size) + " \n" \
+                      + "epochs = "          + str(net.epochs) + " \n" \
+                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      
+                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
+                           + '_mining-'   + str(net.mining_method) \
+                           + '_alpha'     + str(net.alpha) \
+                           + '_epochs'    + str(net.epochs) \
+                           + '_batchSize' + str(net.batch_size) \
+                           + '_steps'     + str(net.steps_per_epoch)
+            else:
+                figtext = "mining method = " + net.mining_method + " \n" \
+                      + "embedding size = "  + str(net.embedding_size) + " \n" \
+                      + "alpha = "           + str(net.alpha) + " \n" \
+                      + "number of samples per class = " + str(net.number_of_samples_per_class) + " \n" \
+                      + "epochs = "          + str(net.epochs) + " \n" \
+                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      
+                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
+                           + '_mining-'   + str(net.mining_method) \
+                           + '_alpha'     + str(net.alpha) \
+                           + '_epochs'    + str(net.epochs) \
+                           + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class) \
+                           + '_steps'     + str(net.steps_per_epoch)
+                
+        plt.figtext(0.15, -0.2, figtext, ha="left", fontsize=10, bbox={"facecolor":"orange", "alpha":0.3, "pad":5})
+            
+        plt.savefig('pics/' + folder_name + '/' + model_name + '.png', bbox_inches="tight")
+        plt.show()
+        
+    # Make 2 tsne subplots - one with original data, and one with the same data, embedded with net.
+    # X        - Data to be plotted.
+    # y        - Labels of X data.
+    # net      - Net with which to embed X data.
+    # suptitle - Optional suptitle for the produced figure.
+    def tsne_plot(self, X, y, net, suptitle=''):
+        X_embedded = net.embedding_model.predict(X)
+        
+        # First reduce the data with PCA to a reasonable amount - 50 dimensions.
+        pca_original = PCA(n_components=50).fit_transform(X)
+        pca_embedded = PCA(n_components=50).fit_transform(X_embedded)
+        
+        # Choose random data for plotting, otherwise it takes too much time.
+        # 500 samples per class, this can be optionally modified...
+        rndperm = random.permutation(net.data_handler.n_classes*500)
+        pca_original = pca_original[rndperm]
+        pca_embedded = pca_embedded[rndperm]
+
+        # Perform tsne on pca data.
+        tsne = TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
+        tsne_original = tsne.fit_transform(pca_original)
+        tsne_embedded = tsne.fit_transform(pca_embedded)
+        
+        fig = plt.figure(figsize=(9, 4))
+        ax1 = plt.subplot(1, 2, 1)
+        ax2 = plt.subplot(1, 2, 2)
+        fig.suptitle(suptitle, fontsize=14, fontweight='bold')
+        ax1.set_title('Original data')
+        ax2.set_title('Embedded data')
+        ax1.grid()
+        ax2.grid()
+        ax1.scatter(tsne_original[:, 0], tsne_original[:, 1], c=y[rndperm], cmap='Paired')
+        scatter_2 = ax2.scatter(tsne_embedded[:, 0], tsne_embedded[:, 1], c=y[rndperm], cmap='Paired')
+        legend2 = ax2.legend(*scatter_2.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
+        ax2.add_artist(legend2)
         
         if isinstance(net, SiameseNet):
             folder_name = 'contrastive'
