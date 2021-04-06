@@ -1,2 +1,0 @@
-model_checkpoint_path: "model4_mining-create_triplet_batch_random_alpha0.15_epochs20_batchSize300_steps10"
-all_model_checkpoint_paths: "model4_mining-create_triplet_batch_random_alpha0.15_epochs20_batchSize300_steps10"
