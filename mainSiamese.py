@@ -28,18 +28,17 @@ for alpha in alphas:
 
     # % Plot data MNIST
     # TRAIN DATA ############################################################################
-    plotter.pca_plot(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
+    plotter.pca_plot_compare(X=dh.X_train, y=dh.y_train, net=net, suptitle='Train data')
 
     # % TEST DATA #############################################################################
-    plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net, suptitle='Test data')
+    plotter.pca_plot_compare(X=dh.X_test, y=dh.y_test, net=net, suptitle='Test data')
     
     # % NEW DATA #############################################################################
-    #plotter.set_plot_parameters(workspace)
-    #plotter.pca_plot(X=dh_newdata.X_test, y=dh_newdata.y_test, net=net, suptitle='Different data')
+    #plotter.pca_plot_compare(X=dh_newdata.X_test, y=dh_newdata.y_test, net=net, suptitle='Different data')
 
 # %% NEW DATA
 net.save_model()
 net1 = SiameseNet(model_name='model4_alpha0.1_epochs1_batchSize200_steps1')
 
-plotter.pca_plot(X=dh.X_test, y=dh.y_test, net=net1, suptitle='hgfhfg data')
+plotter.pca_plot_compare(X=dh.X_test, y=dh.y_test, net=net1, suptitle='hgfhfg data')
    

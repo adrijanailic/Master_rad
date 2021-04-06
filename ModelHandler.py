@@ -1,6 +1,8 @@
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Reshape, Conv2D, MaxPooling2D, Lambda 
 from tensorflow.keras.models import Sequential
 from tensorflow.math import l2_normalize
+import visualkeras
+from tensorflow.keras.utils import plot_model
 
 
 class ModelHandler:
@@ -59,4 +61,9 @@ class ModelHandler:
             # Not sure if this normalization layer is necessary...also activation in the dense layer used to be sigmoid
             
         return model
+    
+    # Visualize model architecture.
+    def visualize_model(self):
+        #visualkeras.layered_view(self.model, to_file='model_architecture.png').show()
+        plot_model(self.model, to_file='model_architecture.png', show_shapes=True)
 

@@ -2,7 +2,7 @@ from sklearn.decomposition import PCA
 from SiameseNet import SiameseNet
 from TripletNet import TripletNet
 import matplotlib.pyplot as plt
-from numpy import random
+from numpy import random, unique
 from sklearn.manifold import TSNE
 
 
@@ -46,22 +46,46 @@ class Plotter:
                 + '_epochs'    + str(net.epochs) \
                 + '_batchSize' + str(net.batch_size) \
                 + '_steps'     + str(net.steps_per_epoch)
+            
+            figtext = "embedding size = " + str(net.embedding_size) + " \n" \
+                  + "alpha = " + str(net.alpha) + " \n" \
+                  + "batch size = " + str(net.batch_size) + " \n" \
+                  + "epochs = " + str(net.epochs) + " \n" \
+                  + "steps per epoch = " + str(net.steps_per_epoch)
+                  
         elif isinstance(net, TripletNet):
             folder_name = 'triplet'
             if net.mining_method == 'create_triplet_batch_random':
                 model_name = 'HISTORY_model' + str(net.model_handler.model_number) \
                            + '_mining-'   + str(net.mining_method) \
+                           + '_embedding_size'   + str(net.embedding_size) \
                            + '_alpha'     + str(net.alpha) \
                            + '_epochs'    + str(net.epochs) \
                            + '_batchSize' + str(net.batch_size) \
                            + '_steps'     + str(net.steps_per_epoch)
+                           
+                figtext = "mining method = " + net.mining_method + " \n" \
+                      + "embedding size = "  + str(net.embedding_size) + " \n" \
+                      + "alpha = "           + str(net.alpha) + " \n" \
+                      + "batch size = "      + str(net.batch_size) + " \n" \
+                      + "epochs = "          + str(net.epochs) + " \n" \
+                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      
             else:
                 model_name = 'HISTORY_model' + str(net.model_handler.model_number) \
                            + '_mining-'   + str(net.mining_method) \
+                           + '_embedding_size'   + str(net.embedding_size) \
                            + '_alpha'     + str(net.alpha) \
                            + '_epochs'    + str(net.epochs) \
                            + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class) \
                            + '_steps'     + str(net.steps_per_epoch)
+                           
+                figtext = "mining method = " + net.mining_method + " \n" \
+                      + "embedding size = "  + str(net.embedding_size) + " \n" \
+                      + "alpha = "           + str(net.alpha) + " \n" \
+                      + "number of samples per class = " + str(net.number_of_samples_per_class) + " \n" \
+                      + "epochs = "          + str(net.epochs) + " \n" \
+                      + "steps per epoch = " + str(net.steps_per_epoch)
         
         plt.figure()
         plt.grid(True)
@@ -70,6 +94,7 @@ class Plotter:
         plt.plot(xc, val_loss, label='validation loss')
         plt.xlabel('epochs')
         plt.legend(loc='best')
+        plt.figtext(0.15, -0.25, figtext, ha="left", fontsize=10, bbox={"facecolor":"orange", "alpha":0.3, "pad":5})
             
         plt.savefig('pics/' + folder_name + '/' + model_name + '.png', bbox_inches="tight")
         plt.show()
@@ -79,7 +104,7 @@ class Plotter:
     # y        - Labels of X data.
     # net      - Net with which to embed X data.
     # suptitle - Optional suptitle for the produced figure.
-    def pca_plot(self, X, y, net, suptitle=''):
+    def pca_plot_compare(self, X, y, net, suptitle=''):
         X_embedded = net.embedding_model.predict(X)
         pca_original = PCA(n_components=2).fit_transform(X)
         pca_embedded = PCA(n_components=2).fit_transform(X_embedded)
@@ -127,6 +152,7 @@ class Plotter:
                            + '_epochs'    + str(net.epochs) \
                            + '_batchSize' + str(net.batch_size) \
                            + '_steps'     + str(net.steps_per_epoch)
+           
             else:
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
@@ -147,12 +173,29 @@ class Plotter:
         plt.savefig('pics/' + folder_name + '/' + model_name + '.png', bbox_inches="tight")
         plt.show()
         
+    # PCA plot of the given data.
+    # X        - Data to be plotted.
+    # y        - Labels of X data.
+    # title    - Title to put on the plot.
+    # figname  - Under what name to save figure in folder.
+    def pca_plot(self, X, y, title='', figname=''):
+        pca_original = PCA(n_components=2).fit_transform(X)
+        
+        plt.figure()
+        plt.title(title)
+        plt.grid()
+        scatter_1 = plt.scatter(pca_original[:, 0], pca_original[:, 1], c=y, cmap='Paired')
+        plt.legend(*scatter_1.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
+            
+        plt.savefig('pics/' + figname + '.png', bbox_inches="tight")
+        plt.show()
+        
     # Make 2 tsne subplots - one with original data, and one with the same data, embedded with net.
     # X        - Data to be plotted.
     # y        - Labels of X data.
     # net      - Net with which to embed X data.
     # suptitle - Optional suptitle for the produced figure.
-    def tsne_plot(self, X, y, net, suptitle=''):
+    def tsne_plot_compare(self, X, y, net, suptitle=''):
         X_embedded = net.embedding_model.predict(X)
         
         # First reduce the data with PCA to a reasonable amount - 50 dimensions.
@@ -213,6 +256,7 @@ class Plotter:
                            + '_epochs'    + str(net.epochs) \
                            + '_batchSize' + str(net.batch_size) \
                            + '_steps'     + str(net.steps_per_epoch)
+            
             else:
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
@@ -231,4 +275,36 @@ class Plotter:
         plt.figtext(0.15, -0.2, figtext, ha="left", fontsize=10, bbox={"facecolor":"orange", "alpha":0.3, "pad":5})
             
         plt.savefig('pics/' + folder_name + '/' + model_name + '.png', bbox_inches="tight")
+        plt.show()
+
+    # Make tsne plot of the given data.
+    # X        - Data to be plotted.
+    # y        - Labels of X data.
+    # title    - Title to put on the plot.
+    # figname  - Under what name to save figure in folder.
+    def tsne_plot(self, X, y, title='', figname=''):
+        # First reduce the data with PCA to a reasonable amount - 50 dimensions.
+        pca_original = PCA(n_components=50).fit_transform(X)
+        classes, counts = unique(y, return_counts=True)
+        print(classes)
+        n_classes = len(classes)
+        print(n_classes)
+        
+        # Choose random data for plotting, otherwise it takes too much time.
+        # 500 samples per class, this can be optionally modified...
+        rndperm = random.permutation(n_classes*500)
+        pca_original = pca_original[rndperm]
+
+        # Perform tsne on pca data.
+        tsne = TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
+        tsne_original = tsne.fit_transform(pca_original)
+        
+        plt.figure()
+        plt.title(title)
+        plt.grid()
+        scatter_1 = plt.scatter(tsne_original[:, 0], tsne_original[:, 1], c=y[rndperm], cmap='Paired')
+        plt.legend(*scatter_1.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
+        
+        
+        plt.savefig('pics/' + figname + '.png', bbox_inches="tight")
         plt.show()
