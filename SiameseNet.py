@@ -21,9 +21,12 @@ class SiameseNet:
         if model_name == 0: 
             self.data_handler       = data_handler
             self.input_feature_size = data_handler.n_features
+            
+            model_handler.reinitialize()
             self.model_handler      = model_handler
             self.embedding_model    = model_handler.model
             self.embedding_size     = model_handler.embedding_size
+            
             self.alpha              = alpha
             self.create_siamese_net()
         else:

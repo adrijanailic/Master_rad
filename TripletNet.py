@@ -7,6 +7,9 @@ from tensorflow.keras.callbacks import Callback
 from random       import randint, sample
 from ModelHandler import ModelHandler
 from DataHandler  import DataHandler
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
 
 # TripletNet class.
 class TripletNet:
@@ -23,9 +26,12 @@ class TripletNet:
         if model_name == 0:
             self.data_handler       = data_handler
             self.input_feature_size = data_handler.n_features
+            
+            model_handler.reinitialize()
             self.model_handler      = model_handler
             self.embedding_model    = model_handler.model
             self.embedding_size     = model_handler.embedding_size
+            
             self.alpha              = alpha
             self.create_triplet_model()
         else:
@@ -42,8 +48,11 @@ class TripletNet:
         self.net = TripletModel(self.embedding_model)
         self.net([input_anchor, input_positive, input_negative])
         
+        # Set optimizer.
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+        
         # Compile the model.
-        self.net.compile(loss=self.triplet_loss, optimizer='adam')
+        self.net.compile(loss=self.triplet_loss, optimizer=optimizer)
             
     # Print model summary.
     def print_model(self):
@@ -86,7 +95,7 @@ class TripletNet:
         with open('./models/triplet/' + model_name + '.pkl', 'wb') as file:
             pickle.dump(model_attributes, file)
         
-        self.net.save_weights('./models/triplet/' + model_name)
+        self.net.save_weights(model_name)
     
     # Load model.
     # model_name - The name of the file where the model weights are stored and
@@ -123,8 +132,12 @@ class TripletNet:
     # y_pred - Set of predicted values - embedded points.
     def triplet_loss(self, y_true, y_pred):
         anchor, positive, negative = y_pred[:,:self.embedding_size], y_pred[:,self.embedding_size:2*self.embedding_size], y_pred[:,2*self.embedding_size:]
-        positive_dist = tf.reduce_mean(tf.square(anchor - positive), axis=1)
-        negative_dist = tf.reduce_mean(tf.square(anchor - negative), axis=1)
+        positive_dist = tf.reduce_sum(tf.square(anchor - positive), axis=1) # ovde reduce_mean
+        negative_dist = tf.reduce_sum(tf.square(anchor - negative), axis=1) # ovde reduce_mean
+        # positive_dist and negative_dist are batch_sizex1
+        # tj, reduce mean usrednjava po embedinzima
+        # tf. maximum vraca batch_sizex1
+        # Here we actually have SQUARED EUCLIDIAN DISTANCE.
         return tf.maximum(positive_dist - negative_dist + self.alpha, 0.)
     
     # Train the model.
@@ -242,6 +255,16 @@ class TrainingCallback(Callback):
         else:
             print("Invalid function name. Exiting program...")
             raise SystemExit(0)
+            
+    # Callback function that is called at each epoch end. Here, we plot...
+    # def on_epoch_end(self, batch, logs=None):
+    #     # Predict output for the batched samples.
+    #     embedded_data = self.model.embedding_model.predict(self.data_handler.X_train)
+    #     pca_x = PCA(n_components=2).fit_transform(embedded_data)
+    #     plt.figure()
+    #     plt.grid(True)
+    #     plt.scatter(pca_x[:, 0], pca_x[:, 1], c=self.data_handler.y_train, cmap='Accent')
+    #     plt.show()
     
     # Create a random batch of batch_size number of triplets.
     def create_triplet_batch_random(self):
@@ -289,7 +312,7 @@ class TrainingCallback(Callback):
         for i in range(0, P):
             # Choose K random samples from ith class.
             ith_class_indices = np.squeeze(np.where(self.data_handler.y_train == self.data_handler.class_labels[i]))
-            random_indices    = sample(range(0, len(ith_class_indices)), K)
+            random_indices    = ith_class_indices[sample(range(0, len(ith_class_indices)), K)]
 
             batched_samples_X[i*K:(i+1)*K, :] = self.data_handler.X_train[random_indices]
             batched_samples_y[i*K:(i+1)*K]    = np.array(K * [i])
@@ -325,6 +348,7 @@ class TrainingCallback(Callback):
     
     # Choose a random set of samples and then, for each sample as anchor, form
     # triplets by selecting the hardest negative and the hardest positive sample.
+    # Ovde biramo uvek najteze primere.. zato loss ne spada mnogo??
     def batch_hard(self):
         K = self.samples_per_class      # Number of samples per class.
         P = self.data_handler.n_classes # Number of classes.
@@ -336,13 +360,14 @@ class TrainingCallback(Callback):
         for i in range(0, P):
             # Choose k random samples from ith class.
             ith_class_indices = np.squeeze(np.where(self.data_handler.y_train == self.data_handler.class_labels[i]))
-            random_indices    = sample(range(0, len(ith_class_indices)), K)
+            random_indices    = ith_class_indices[sample(range(0, len(ith_class_indices)), K)]
 
             batched_samples_X[i*K:(i+1)*K, :] = self.data_handler.X_train[random_indices]
             batched_samples_y[i*K:(i+1)*K]    = np.array(K * [i])
         
         # Predict output for the batched samples.
         preds = self.model.embedding_model.predict(batched_samples_X)
+        #model_weights = self.model.embedding_model.get_weights(); model weights change during each iteration so this should be fine
         
         # Initialize triplet arrays.
         total_batch_size = P*K
@@ -362,28 +387,32 @@ class TrainingCallback(Callback):
             # See which class the anchor belongs to, and determine positive and negative indices.
             class_number     = int(batched_samples_y[i])
             positive_indices = list(range(class_number*K, (class_number+1)*K))
-            positive_indices.remove(i)
             negative_indices = np.delete(all_indices, positive_indices)
+            positive_indices.remove(i)
             
             # Calculate positive distances.
-            positives = preds[positive_indices]
+            embeddded_positives = preds[positive_indices]
             embeddded_anchor_cloned = np.array([x_embedded_anchor,]*len(positive_indices))
-            positive_dist = tf.reduce_mean(tf.square(embeddded_anchor_cloned - positives), axis=1)
+            positive_dist = tf.reduce_sum(tf.square(embeddded_anchor_cloned - embeddded_positives), axis=1) # ovo je ok
             
             # Choose the hardest positive - the most far away sample.
             hardest_positive_ind = np.argmax(positive_dist)
+            #hardest_positive_ind = randint(0, len(positive_indices) - 1)
+
             
             # Calculate negative distances.
-            negatives = preds[negative_indices]
+            embeddded_negatives = preds[negative_indices]
             embeddded_anchor_cloned = np.array([x_embedded_anchor,]*len(negative_indices))
-            negative_dist = tf.reduce_mean(tf.square(embeddded_anchor_cloned - negatives), axis=1)
+            negative_dist = tf.reduce_sum(tf.square(embeddded_anchor_cloned - embeddded_negatives), axis=1)
             
             # Choose the hardest negative - the closest sample.
-            hardest_negative_ind = np.argmax(negative_dist)
+            hardest_negative_ind = np.argmin(negative_dist)
+            #hardest_negative_ind = randint(0, len(negative_indices) - 1)
+            #print('A: ' + str(i) + ' P: ' + str(positive_indices[hardest_positive_ind]) + ' N: ' + str(negative_indices[hardest_negative_ind]))
 
             # Declare i-th triplet.
             x_anchors[i]   = x_anchor
-            x_positives[i] = batched_samples_X[hardest_positive_ind]
-            x_negatives[i] = batched_samples_X[hardest_negative_ind]
+            x_positives[i] = batched_samples_X[positive_indices[hardest_positive_ind]]
+            x_negatives[i] = batched_samples_X[negative_indices[hardest_negative_ind]]
 
         return [x_anchors, x_positives, x_negatives], ys

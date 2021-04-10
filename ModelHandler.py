@@ -1,7 +1,6 @@
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Reshape, Conv2D, MaxPooling2D, Lambda 
 from tensorflow.keras.models import Sequential
 from tensorflow.math import l2_normalize
-import visualkeras
 from tensorflow.keras.utils import plot_model
 
 
@@ -56,11 +55,20 @@ class ModelHandler:
             model.add(Conv2D(128, (7,7), activation='relu'))
             model.add(MaxPooling2D())
             model.add(Flatten())
+            model.add(Dense(128, activation='relu'))
+            model.add(Dense(128, activation='relu'))
             model.add(Dense(self.embedding_size, activation=None)) # no activation on the final dense layer
             Lambda(lambda x: l2_normalize(x, axis=1)) # L2 normalize embeddings
             # Not sure if this normalization layer is necessary...also activation in the dense layer used to be sigmoid
-            
+        
+        # Save initial weights.
+        self.init_model_weights = model.get_weights();
+        
         return model
+    
+    # Reinitialize model weights.
+    def reinitialize(self):
+        self.model.set_weights(self.init_model_weights)
     
     # Visualize model architecture.
     def visualize_model(self):
