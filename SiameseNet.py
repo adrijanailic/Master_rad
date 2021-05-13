@@ -41,9 +41,12 @@ class SiameseNet:
         # Define model.
         self.net = SiameseModel(self.embedding_model)
         self.net([input_1, input_2])
+        
+        # Set optimizer.
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
         # Compile the model.
-        self.net.compile(loss=self.contrastive_loss, optimizer='adam')                
+        self.net.compile(loss=self.contrastive_loss, optimizer=optimizer)                
 
     # Print model summary.
     def print_model(self):
@@ -106,19 +109,13 @@ class SiameseNet:
             y = self.create_a_batch_callback.ys
             yield x, y
 
-    # TODO: check if needed!
-    @staticmethod
-    def euclidian_distance(vectors):
-        (positive, negative) = vectors
-        return tf.reduce_mean(tf.square(positive - negative), axis=1)
-
     # Contrastive loss.
     # y_true - Set of correct labels. Here, y_true is a vector of similarities between the two, paired vectors.
     #          Value is 0 for similar points and 1 for dissimilar points.
     # y_pred - Set of predicted values - embedded points.
     def contrastive_loss(self, y_true, y_pred):
         positive, negative = y_pred[:, :self.embedding_size], y_pred[:, self.embedding_size:]
-        dist = tf.reduce_mean(tf.square(positive - negative), axis=1)
+        dist = tf.reduce_sum(tf.square(positive - negative), axis=1)
         return (1 - y_true) * dist + y_true * tf.maximum(0., self.alpha - dist)
     
     # Train the model.
@@ -193,8 +190,6 @@ class SiameseModel(Model):
     def call(self, inputs, training=False):
         embedded_1 = self.embedding_model(inputs[0]) # input_1
         embedded_2 = self.embedding_model(inputs[1]) # input_2
-        # distance = Lambda(self.euclidean_distance)([embedded_1, embedded_2])
-        # output = Dense(1, activation="sigmoid")(distance)
         output = concatenate([embedded_1, embedded_2], axis=1)
 
         return output
@@ -241,18 +236,18 @@ class TrainingCallback(Callback):
             x_1 = self.data_handler.X_train[random_index]
             y_1 = self.data_handler.y_train[random_index]
 
-            # Find indices of similar and dissimilar elements.
-            similar_indices = np.squeeze(np.where(self.data_handler.y_train == y_1))
-            dissimilar_indices = np.squeeze(np.where(self.data_handler.y_train != y_1))
-
             # Most of the data is going to be dissimilar.
             # With choose_probability we want to give some advantage to the similar data as well.
             # TODO: This parameter has some powerful effects on the results. Document it!
             choose_probability = random()
 
             if choose_probability < same_class_frequency:
+                # Find indices of similar elements.
+                similar_indices = np.squeeze(np.where(self.data_handler.y_train == y_1))
+                
                 # Choose a random similar example.
                 ys[i] = 0
+                
                 # We assume that there is at least one similar example.
                 if similar_indices.ndim != 0:
                     random_index = randint(0, len(similar_indices) - 1)
@@ -260,6 +255,9 @@ class TrainingCallback(Callback):
                 else:
                     x_2 = self.data_handler.X_train[similar_indices]
             else:
+                # Find indices of dissimilar elements.
+                dissimilar_indices = np.squeeze(np.where(self.data_handler.y_train != y_1))
+
                 # Choose a random dissimilar example.
                 ys[i] = 1
                 random_index = randint(0, len(dissimilar_indices) - 1)
