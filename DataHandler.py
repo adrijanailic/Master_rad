@@ -1,4 +1,5 @@
 import numpy as np
+from cv2 import resize
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
@@ -7,7 +8,8 @@ class DataHandler:
     # Constructor.
     # data_to_load      - Name of the dataset to load.
     # classes_to_select - Classes to select from the dataset.
-    def __init__(self, data_to_load, classes_to_select=[]):
+    # resize_images     - Whether to resize images to 32x32. (Used for VGG model.)
+    def __init__(self, data_to_load, classes_to_select=[], resize_images=False):
         self.dataset_name = data_to_load
             
         if data_to_load == "MNIST":
@@ -21,6 +23,15 @@ class DataHandler:
             (self.X_train, self.y_train), (self.X_test, self.y_test) = tf.keras.datasets.mnist.load_data()
             self.shape = (self.X_train.shape[1], self.X_train.shape[2], 1)  # Original shape, before reshaping.
 
+
+            # Resize.
+            if resize_images == True:
+                self.resize_images()
+                self.X_test  = tf.image.resize(self.X_test, [32, 32])
+                self.X_train = np.dstack([self.X_train] * 3)
+                self.X_test = np.dstack([self.X_test] * 3)
+                self.shape = (self.X_train.shape[1], self.X_train.shape[2], 3)  # Original shape, before reshaping.
+                
             # X_train.shape: (60000, 28, 28) --> (60000, 784)
             self.X_train = np.reshape(self.X_train,
                                      (self.X_train.shape[0], self.X_train.shape[1] * self.X_train.shape[2])) / 255.
@@ -42,6 +53,13 @@ class DataHandler:
             (self.X_train, self.y_train), (self.X_test, self.y_test) = tf.keras.datasets.fashion_mnist.load_data()
             self.shape = (self.X_train.shape[1], self.X_train.shape[2], 1)  # Original shape, before reshaping.
 
+            # Resize.
+            if resize_images == True:
+                self.resize_images()
+                self.X_train = np.dstack([self.X_train] * 3)
+                self.X_test = np.dstack([self.X_test] * 3)
+                self.shape = (self.X_train.shape[1], self.X_train.shape[2], 3)  # Original shape, before reshaping.
+                
             # X_train.shape: (60000, 28, 28) --> (60000, 784)
             self.X_train = np.reshape(self.X_train,
                                      (self.X_train.shape[0], self.X_train.shape[1] * self.X_train.shape[2])) / 255.
@@ -77,3 +95,17 @@ class DataHandler:
         validate_mask   = np.isin(self.y_validate, classes_to_select)
         self.X_validate = self.X_validate[validate_mask]
         self.y_validate = self.y_validate[validate_mask]
+        
+    # Resize images in the selected dataset to size 32x32.
+    def resize_images(self):
+        X_train = np.zeros((self.X_train.shape[0], 32, 32))
+        for i in range(self.X_train.shape[0]):
+            X_train[i, :, :] = resize(self.X_train[i], (32, 32))
+            
+        X_test = np.zeros((self.X_test.shape[0], 32, 32))
+        for i in range(self.X_test.shape[0]):
+            X_test[i, :, :] = resize(self.X_test[i], (32, 32))
+        
+        self.X_train = X_train
+        self.X_test  = X_test
+        
