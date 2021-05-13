@@ -43,15 +43,11 @@ class Plotter:
             folder_name = 'contrastive'
             model_name = 'HISTORY_model' + str(net.model_handler.model_number) \
                 + '_alpha'     + str(net.alpha) \
-                + '_epochs'    + str(net.epochs) \
-                + '_batchSize' + str(net.batch_size) \
-                + '_steps'     + str(net.steps_per_epoch)
+                + '_batchSize' + str(net.batch_size)
             
             figtext = "embedding size = " + str(net.embedding_size) + " \n" \
                   + "alpha = " + str(net.alpha) + " \n" \
-                  + "batch size = " + str(net.batch_size) + " \n" \
-                  + "epochs = " + str(net.epochs) + " \n" \
-                  + "steps per epoch = " + str(net.steps_per_epoch)
+                  + "batch size = " + str(net.batch_size)
                   
         elif isinstance(net, TripletNet):
             folder_name = 'triplet'
@@ -60,32 +56,24 @@ class Plotter:
                            + '_mining-'   + str(net.mining_method) \
                            + '_embedding_size'   + str(net.embedding_size) \
                            + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
-                           + '_batchSize' + str(net.batch_size) \
-                           + '_steps'     + str(net.steps_per_epoch)
+                           + '_batchSize' + str(net.batch_size)
                            
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
-                      + "batch size = "      + str(net.batch_size) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      + "batch size = "      + str(net.batch_size)
                       
             else:
                 model_name = 'HISTORY_model' + str(net.model_handler.model_number) \
                            + '_mining-'   + str(net.mining_method) \
                            + '_embedding_size'   + str(net.embedding_size) \
                            + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
-                           + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class) \
-                           + '_steps'     + str(net.steps_per_epoch)
+                           + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class)
                            
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
-                      + "number of samples per class = " + str(net.number_of_samples_per_class) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      + "number of samples per class = " + str(net.number_of_samples_per_class)
         
         plt.figure()
         plt.grid(True)
@@ -126,15 +114,12 @@ class Plotter:
             folder_name = 'contrastive'
             figtext = "embedding size = " + str(net.embedding_size) + " \n" \
                   + "alpha = " + str(net.alpha) + " \n" \
-                  + "batch size = " + str(net.batch_size) + " \n" \
-                  + "epochs = " + str(net.epochs) + " \n" \
-                  + "steps per epoch = " + str(net.steps_per_epoch)
+                  + "batch size = " + str(net.batch_size)
             
-            model_name = suptitle + '_model' + str(net.model_handler.model_number) \
+            model_name = 'PCA_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                  + "embedding size = " + str(net.embedding_size) \
                   + '_alpha' + str(net.alpha) \
-                  + '_epochs' + str(net.epochs) \
                   + '_batchSize' + str(net.batch_size) \
-                  + '_steps' + str(net.steps_per_epoch)
         
         elif isinstance(net, TripletNet):
             folder_name = 'triplet'
@@ -143,30 +128,24 @@ class Plotter:
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
                       + "batch size = "      + str(net.batch_size) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
                       
-                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
-                           + '_mining-'   + str(net.mining_method) \
-                           + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
-                           + '_batchSize' + str(net.batch_size) \
-                           + '_steps'     + str(net.steps_per_epoch)
+                model_name = 'PCA_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                           + 'embedding size = ' + str(net.embedding_size) \
+                           + '_mining-'          + str(net.mining_method) \
+                           + '_alpha'            + str(net.alpha) \
+                           + '_batchSize'        + str(net.batch_size) \
            
             else:
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
                       + "number of samples per class = " + str(net.number_of_samples_per_class) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
                       
-                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
-                           + '_mining-'   + str(net.mining_method) \
-                           + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
+                model_name = 'PCA_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                           + 'embedding size = ' + str(net.embedding_size) \
+                           + '_mining-'          + str(net.mining_method) \
+                           + '_alpha'            + str(net.alpha) \
                            + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class) \
-                           + '_steps'     + str(net.steps_per_epoch)
                 
         plt.figtext(0.15, -0.2, figtext, ha="left", fontsize=10, bbox={"facecolor":"orange", "alpha":0.3, "pad":5})
             
@@ -187,7 +166,7 @@ class Plotter:
         scatter_1 = plt.scatter(pca_original[:, 0], pca_original[:, 1], c=y, cmap='Paired')
         plt.legend(*scatter_1.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
             
-        plt.savefig('pics/' + figname + '.png', bbox_inches="tight")
+        plt.savefig('pics/' + 'PCA_' + figname + '.png', bbox_inches="tight")
         plt.show()
         
     # Make 2 tsne subplots - one with original data, and one with the same data, embedded with net.
@@ -198,9 +177,13 @@ class Plotter:
     def tsne_plot_compare(self, X, y, net, suptitle=''):
         X_embedded = net.embedding_model.predict(X)
         
-        # First reduce the data with PCA to a reasonable amount - 50 dimensions.
-        pca_original = PCA(n_components=50).fit_transform(X)
-        pca_embedded = PCA(n_components=50).fit_transform(X_embedded)
+        if net.embedding_size > 50:
+            # First reduce the data with PCA to a reasonable amount - 50 dimensions.
+            pca_original = PCA(n_components=50).fit_transform(X)
+            pca_embedded = PCA(n_components=50).fit_transform(X_embedded)
+        else:
+            pca_original = X
+            pca_embedded = X_embedded
         
         # Choose random data for plotting, otherwise it takes too much time.
         # 500 samples per class, this can be optionally modified...
@@ -230,15 +213,12 @@ class Plotter:
             folder_name = 'contrastive'
             figtext = "embedding size = " + str(net.embedding_size) + " \n" \
                   + "alpha = " + str(net.alpha) + " \n" \
-                  + "batch size = " + str(net.batch_size) + " \n" \
-                  + "epochs = " + str(net.epochs) + " \n" \
-                  + "steps per epoch = " + str(net.steps_per_epoch)
+                  + "batch size = " + str(net.batch_size)
             
-            model_name = suptitle + '_model' + str(net.model_handler.model_number) \
+            model_name = 'TSNE_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                  + 'embedding size = ' + str(net.embedding_size) \
                   + '_alpha' + str(net.alpha) \
-                  + '_epochs' + str(net.epochs) \
                   + '_batchSize' + str(net.batch_size) \
-                  + '_steps' + str(net.steps_per_epoch)
         
         elif isinstance(net, TripletNet):
             folder_name = 'triplet'
@@ -246,31 +226,25 @@ class Plotter:
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
-                      + "batch size = "      + str(net.batch_size) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      + "batch size = "      + str(net.batch_size)
                       
-                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
-                           + '_mining-'   + str(net.mining_method) \
-                           + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
-                           + '_batchSize' + str(net.batch_size) \
-                           + '_steps'     + str(net.steps_per_epoch)
+                model_name = 'TSNE_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                           + 'embedding size = ' + str(net.embedding_size) \
+                           + '_mining-'          + str(net.mining_method) \
+                           + '_alpha'            + str(net.alpha) \
+                           + '_batchSize'        + str(net.batch_size)
             
             else:
                 figtext = "mining method = " + net.mining_method + " \n" \
                       + "embedding size = "  + str(net.embedding_size) + " \n" \
                       + "alpha = "           + str(net.alpha) + " \n" \
-                      + "number of samples per class = " + str(net.number_of_samples_per_class) + " \n" \
-                      + "epochs = "          + str(net.epochs) + " \n" \
-                      + "steps per epoch = " + str(net.steps_per_epoch)
+                      + "number of samples per class = " + str(net.number_of_samples_per_class)
                       
-                model_name = suptitle + '_model' + str(net.model_handler.model_number) \
-                           + '_mining-'   + str(net.mining_method) \
-                           + '_alpha'     + str(net.alpha) \
-                           + '_epochs'    + str(net.epochs) \
-                           + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class) \
-                           + '_steps'     + str(net.steps_per_epoch)
+                model_name = 'TSNE_' + suptitle + '_model' + str(net.model_handler.model_number) \
+                           + 'embedding size = ' + str(net.embedding_size) \
+                           + '_mining-'          + str(net.mining_method) \
+                           + '_alpha'            + str(net.alpha) \
+                           + '_numberOfSamplesPerClass' + str(net.number_of_samples_per_class)
                 
         plt.figtext(0.15, -0.2, figtext, ha="left", fontsize=10, bbox={"facecolor":"orange", "alpha":0.3, "pad":5})
             
@@ -306,5 +280,5 @@ class Plotter:
         plt.legend(*scatter_1.legend_elements(), loc="upper left", bbox_to_anchor=(1.01, 1), title="Classes")
         
         
-        plt.savefig('pics/' + figname + '.png', bbox_inches="tight")
+        plt.savefig('pics/' + 'TSNE_' + figname + '.png', bbox_inches="tight")
         plt.show()
