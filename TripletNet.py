@@ -248,6 +248,8 @@ class TrainingCallback(Callback):
     def on_train_batch_end(self, batch, logs=None):
         if self.batch_function_name == "batch_hard":
             self.xs, self.ys = self.batch_hard()
+        elif self.batch_function_name == "batch_semihard":
+            self.xs, self.ys = self.batch_semihard()
         elif self.batch_function_name == "batch_all":
             self.xs, self.ys = self.batch_all()
         elif self.batch_function_name == "create_triplet_batch_random":
@@ -348,7 +350,6 @@ class TrainingCallback(Callback):
     
     # Choose a random set of samples and then, for each sample as anchor, form
     # triplets by selecting the hardest negative and the hardest positive sample.
-    # Ovde biramo uvek najteze primere.. zato loss ne spada mnogo??
     def batch_hard(self):
         K = self.samples_per_class      # Number of samples per class.
         P = self.data_handler.n_classes # Number of classes.
@@ -415,4 +416,78 @@ class TrainingCallback(Callback):
             x_positives[i] = batched_samples_X[positive_indices[hardest_positive_ind]]
             x_negatives[i] = batched_samples_X[negative_indices[hardest_negative_ind]]
 
+        return [x_anchors, x_positives, x_negatives], ys
+    
+    # Choose a random set of samples and then, for each anchor-positive pair, form
+    # triplets by selecting the hardest negative, which is still further away from the anchor
+    # compared to the positive.
+    def batch_semihard(self):
+        K = self.samples_per_class      # Number of samples per class.
+        P = self.data_handler.n_classes # Number of classes.
+        
+        # Initialize batched samples arrays.
+        batched_samples_X = np.zeros((P*K, self.data_handler.n_features))
+        batched_samples_y = np.zeros(P*K)
+        
+        for i in range(0, P):
+            # Choose k random samples from ith class.
+            ith_class_indices = np.squeeze(np.where(self.data_handler.y_train == self.data_handler.class_labels[i]))
+            random_indices    = ith_class_indices[sample(range(0, len(ith_class_indices)), K)]
+
+            batched_samples_X[i*K:(i+1)*K, :] = self.data_handler.X_train[random_indices]
+            batched_samples_y[i*K:(i+1)*K]    = np.array(K * [i])
+        
+        # Predict output for the batched samples.
+        preds = self.model.embedding_model.predict(batched_samples_X)
+        
+        # Initialize triplet arrays.
+        total_batch_size = P*K*(K-1)
+        x_anchors   = np.zeros((total_batch_size, self.data_handler.n_features))
+        x_positives = np.zeros((total_batch_size, self.data_handler.n_features))
+        x_negatives = np.zeros((total_batch_size, self.data_handler.n_features))
+        ys = np.zeros(total_batch_size)
+        
+        # Create hard triplets from the selected batch samples.
+        # i.e. select only the hardest positive and negative for each sample
+        all_indices = np.arange(0, P*K, 1)
+        semihard_percentage = 0
+        for i in range(0, P*K):
+            # Declare anchor.
+            x_anchor          = batched_samples_X[i]
+            x_embedded_anchor = preds[i]
+            
+            # See which class the anchor belongs to, and determine positive and negative indices.
+            class_number     = int(batched_samples_y[i])
+            positive_indices = list(range(class_number*K, (class_number+1)*K))
+            negative_indices = np.delete(all_indices, positive_indices)
+            positive_indices.remove(i)
+            
+            # Calculate positive distances.
+            embeddded_positives = preds[positive_indices]
+            embeddded_anchor_cloned = np.array([x_embedded_anchor,]*len(positive_indices))
+            positive_dist = tf.reduce_sum(tf.square(embeddded_anchor_cloned - embeddded_positives), axis=1) # ovo je ok
+            
+            # Calculate negative distances.
+            embeddded_negatives = preds[negative_indices]
+            embeddded_anchor_cloned = np.array([x_embedded_anchor,]*len(negative_indices))
+            negative_dist = tf.reduce_sum(tf.square(embeddded_anchor_cloned - embeddded_negatives), axis=1)
+                
+            for j in range(len(positive_indices)):               
+                # Choose the semihard negative.
+                tmp = negative_dist - positive_dist[j]
+                tmp2 = tmp[tmp > 0]
+                if tmp2 != []:
+                    semihard_negative_ind = np.where(tmp == [min(tmp2)])
+                    semihard_negative_ind = semihard_negative_ind[0][0]
+                    semihard_percentage += 1
+                else:
+                    semihard_negative_ind = randint(0, len(negative_indices) - 1)
+
+                
+                # Declare i-th triplet.
+                x_anchors[i*len(positive_indices) + j]   = x_anchor
+                x_positives[i*len(positive_indices) + j] = batched_samples_X[positive_indices[j]]
+                x_negatives[i*len(positive_indices) + j] = batched_samples_X[negative_indices[semihard_negative_ind]]
+        
+        #print(" semihard percent: " + str(semihard_percentage/total_batch_size))
         return [x_anchors, x_positives, x_negatives], ys
