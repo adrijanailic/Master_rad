@@ -44,9 +44,12 @@ class ModelHandler:
             model.add(Conv2D(128, (7,7), activation='relu'))
             model.add(MaxPooling2D())
             model.add(Flatten())
-            model.add(Dense(128, activation='relu'))
-            model.add(Dense(128, activation='relu'))
-            model.add(Dense(self.embedding_size, activation='sigmoid'))
+            model.add(Dense(256, activation='relu'))
+            model.add(Dense(256, activation='relu'))
+            model.add(Dense(256, activation='relu'))
+            model.add(Dense(self.embedding_size, activation=None)) # no activation on the final dense layer
+            model.add(Lambda(lambda x: l2_normalize(x, axis=1))) # L2 normalize embeddings
+            # Not sure if this normalization layer is necessary...also activation in the dense layer used to be sigmoid
         if self.model_number == 5:
             model = Sequential()
             model.add(Reshape(self.input_feature_dim, input_shape=(self.input_feature_size,)))
@@ -58,7 +61,7 @@ class ModelHandler:
             model.add(Dense(128, activation='relu'))
             model.add(Dense(128, activation='relu'))
             model.add(Dense(self.embedding_size, activation=None)) # no activation on the final dense layer
-            Lambda(lambda x: l2_normalize(x, axis=1)) # L2 normalize embeddings
+            model.add(Lambda(lambda x: l2_normalize(x, axis=1))) # L2 normalize embeddings
             # Not sure if this normalization layer is necessary...also activation in the dense layer used to be sigmoid
         
         # Save initial weights.
