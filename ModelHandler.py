@@ -1,4 +1,5 @@
-from tensorflow.keras.layers import Flatten, Dense, Dropout, Reshape, Conv2D, MaxPooling2D, Lambda 
+from tensorflow.keras.layers import Flatten, Dense, Dropout, Reshape, Conv2D, MaxPooling2D, Lambda
+from tensorflow.keras.applications import VGG16
 from tensorflow.keras.models import Sequential
 from tensorflow.math import l2_normalize
 from tensorflow.keras.utils import plot_model
@@ -60,6 +61,12 @@ class ModelHandler:
             model.add(Flatten())
             model.add(Dense(128, activation='relu'))
             model.add(Dense(128, activation='relu'))
+            model.add(Dense(self.embedding_size, activation=None)) # no activation on the final dense layer
+            model.add(Lambda(lambda x: l2_normalize(x, axis=1))) # L2 normalize embeddings
+        if self.model_number == 6:
+            model = Sequential()
+            model.add(Reshape(self.input_feature_dim, input_shape=(self.input_feature_size,)))
+            model.add(VGG16(include_top=False, weights=None, input_tensor=None, input_shape=self.input_feature_dim))
             model.add(Dense(self.embedding_size, activation=None)) # no activation on the final dense layer
             model.add(Lambda(lambda x: l2_normalize(x, axis=1))) # L2 normalize embeddings
             # Not sure if this normalization layer is necessary...also activation in the dense layer used to be sigmoid
